@@ -22,26 +22,20 @@
             min-height: 100vh;
         }
 
-        /* ===== СТЕКЛЯННЫЕ ЭЛЕМЕНТЫ (iOS-стиль) ===== */
+        /* ===== СТЕКЛЯННЫЕ ЭЛЕМЕНТЫ (iOS-стиль, без теней) ===== */
         .glass-card, .glass-nav, .glass-footer, .faq-item, .howto-text, .download-card, .carousel-item {
             background: rgba(255, 255, 255, 0.08);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 2rem;
-            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.3);
+            /* box-shadow удалён */
         }
 
-        /* ===== АНИМАЦИИ ===== */
+        /* ===== АНИМАЦИИ ПОЯВЛЕНИЯ (оставляем только появление при скролле) ===== */
         @keyframes fadeUp {
             0% { opacity: 0; transform: translateY(30px); }
             100% { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes glowPulse {
-            0% { box-shadow: 0 0 0 0 rgba(44, 87, 205, 0.4); }
-            70% { box-shadow: 0 0 0 12px rgba(44, 87, 205, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(44, 87, 205, 0); }
         }
 
         .fade-up {
@@ -89,11 +83,7 @@
         .logo-app img {
             height: 38px;
             width: auto;
-            transition: transform 0.2s ease;
-        }
-
-        .logo-app:hover img {
-            transform: scale(1.02);
+            /* убраны transition и hover-эффекты */
         }
 
         .nav-links {
@@ -106,7 +96,7 @@
             text-decoration: none;
             color: rgba(255, 255, 255, 0.85);
             font-weight: 500;
-            transition: all 0.2s;
+            transition: color 0.2s; /* оставляем только цвет, без лишних анимаций */
             padding-bottom: 4px;
             border-bottom: 1px solid transparent;
         }
@@ -180,7 +170,7 @@
             margin-bottom: 0;
         }
 
-        /* ===== КАРУСЕЛЬ (скрины) ===== */
+        /* ===== КАРУСЕЛЬ (скрины) — скрываем полосу прокрутки ===== */
         .carousel-section {
             margin-top: 1.5rem;
         }
@@ -198,22 +188,12 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             padding: 0.5rem 0.5rem 2rem 0.5rem;
-            scrollbar-width: thin;
-            scrollbar-color: #2C57CD rgba(255,255,255,0.3);
+            /* скрываем полосу прокрутки */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE/Edge */
         }
-
         .carousel-track::-webkit-scrollbar {
-            height: 6px;
-        }
-
-        .carousel-track::-webkit-scrollbar-thumb {
-            background: #2C57CD;
-            border-radius: 20px;
-        }
-
-        .carousel-track::-webkit-scrollbar-track {
-            background: rgba(255,255,255,0.2);
-            border-radius: 20px;
+            display: none; /* Chrome/Safari */
         }
 
         .carousel-item {
@@ -221,16 +201,10 @@
             scroll-snap-align: start;
             border-radius: 1.8rem;
             overflow: hidden;
-            transition: transform 0.25s ease, box-shadow 0.3s;
             background: rgba(20, 30, 60, 0.5);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.25);
-        }
-
-        .carousel-item:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 25px 35px -12px rgba(0,0,0,0.4);
-            border-color: rgba(255,255,255,0.5);
+            /* убраны тень и переходы */
         }
 
         .carousel-item img {
@@ -261,13 +235,7 @@
             font-size: 1.2rem;
             color: white;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .carousel-btn:hover {
-            background: #2C57CD;
-            border-color: white;
-            transform: scale(1.05);
+            /* убраны тени и переходы, hover-эффект удалён */
         }
 
         /* ===== ИНСТРУКЦИЯ RADMIN ===== */
@@ -300,24 +268,17 @@
             padding: 0.8rem 1.8rem;
             border-radius: 60px;
             font-weight: 500;
-            transition: transform 0.2s, box-shadow 0.2s;
-            margin-top: 0.5rem;
             border: 1px solid rgba(255,255,255,0.3);
-        }
-
-        .radmin-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 20px -8px rgba(0,0,0,0.4);
-            background: #3f68df;
+            /* убраны тени и переходы */
         }
 
         .howto-gif {
             flex: 1 1 45%;
             border-radius: 2rem;
             overflow: hidden;
-            box-shadow: 0 20px 30px -10px rgba(0,0,0,0.4);
             border: 1px solid rgba(255,255,255,0.2);
             background: rgba(0,0,0,0.2);
+            /* убрана тень */
         }
 
         .howto-gif img {
@@ -336,13 +297,8 @@
 
         .faq-item {
             padding: 2rem 1.8rem;
-            transition: all 0.25s;
             backdrop-filter: blur(20px);
-        }
-
-        .faq-item:hover {
-            border-color: #2C57CD;
-            transform: translateY(-4px);
+            /* убраны тени, переходы, hover-эффект */
         }
 
         .faq-item h3 {
@@ -366,6 +322,7 @@
             margin: 0 auto;
             padding: 3rem 2rem;
             backdrop-filter: blur(24px);
+            /* убраны тени */
         }
 
         .download-card h2 {
@@ -388,21 +345,14 @@
             padding: 1rem 2.5rem;
             border-radius: 60px;
             cursor: pointer;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            transition: all 0.2s;
             display: inline-flex;
             align-items: center;
             gap: 0.8rem;
             border: 1px solid rgba(255,255,255,0.2);
+            /* убраны тени и переходы */
         }
 
-        .btn-download:hover {
-            transform: scale(1.02);
-            box-shadow: 0 15px 30px -5px rgba(0,0,0,0.4);
-            background: linear-gradient(135deg, #3f68df, #2C57CD);
-        }
-
-        /* ===== ФУТЕР + МАСКОТ ===== */
+        /* ===== ФУТЕР ===== */
         .footer-wrapper {
             background: rgba(10, 20, 45, 0.7);
             backdrop-filter: blur(12px);
@@ -413,9 +363,8 @@
         footer {
             max-width: 1300px;
             margin: 0 auto;
-            padding: 2.5rem 2rem;
+            padding: 2rem 2rem;
             display: flex;
-            flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
             gap: 2rem;
@@ -424,11 +373,11 @@
         .footer-brand {
             display: flex;
             align-items: center;
-            gap: 1rem;
         }
 
         .footer-brand img {
-            height: 40px;
+            height: 44px;
+            /* убраны transition и hover */
         }
 
         .social-links {
@@ -439,12 +388,7 @@
         .social-links a {
             color: rgba(255,255,255,0.8);
             font-size: 1.6rem;
-            transition: transform 0.2s, color 0.2s;
-        }
-
-        .social-links a:hover {
-            color: white;
-            transform: translateY(-3px);
+            /* убраны transition и hover-эффекты */
         }
 
         .mascot-area {
@@ -455,19 +399,7 @@
         .mascot-area img {
             max-width: 180px;
             opacity: 0.85;
-            transition: all 0.3s;
-        }
-
-        .mascot-area img:hover {
-            opacity: 1;
-            transform: scale(1.02);
-        }
-
-        .copyright {
-            text-align: center;
-            font-size: 0.85rem;
-            color: rgba(255,255,255,0.6);
-            padding-bottom: 1.5rem;
+            /* убраны transition и hover */
         }
 
         /* ===== АДАПТИВНОСТЬ ===== */
@@ -513,7 +445,6 @@
     <div class="nav-container">
         <div class="logo-app">
             <img src="logo.svg" alt="COMMS logo">
-            <span>COMMS</span>
         </div>
         <nav class="nav-links">
             <a href="#about">О приложении</a>
@@ -558,7 +489,6 @@
                 <button class="carousel-btn" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
                 <button class="carousel-btn" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
             </div>
-            <p style="text-align: center; margin-top: 1rem; color: rgba(255,255,255,0.6); font-size: 0.85rem;">* интерфейс в разработке, дизайн может меняться</p>
         </div>
     </section>
 
@@ -625,25 +555,22 @@
     </section>
 </main>
 
-<!-- Маскот и футер -->
+<!-- Маскот -->
 <div class="mascot-area">
     <img src="mascot.png" alt="COMMS mascot">
 </div>
 
+<!-- Футер только с лого студии и соцсетями -->
 <div class="footer-wrapper">
     <footer>
         <div class="footer-brand">
-            <img src="logobgd.svg" alt="Бэгэбэн студия" style="height: 44px;">
-            <span style="font-weight: 500;">© бэгэбэн studio</span>
+            <img src="logobgd.svg" alt="Бэгэбэн студия">
         </div>
         <div class="social-links">
             <a href="https://t.me/begebenstudio" target="_blank" aria-label="Telegram канал студии"><i class="fab fa-telegram-plane"></i></a>
             <a href="https://t.me/thebogdand" target="_blank" aria-label="Контакт для связи"><i class="fas fa-user-headset"></i></a>
         </div>
     </footer>
-    <div class="copyright">
-        COMMS — P2P общение через RadminVPN. Сделано с 💙 в студии бэгэбэн.
-    </div>
 </div>
 
 <script>
@@ -693,7 +620,6 @@
         const downloadBtn = document.getElementById('downloadBtn');
         if (downloadBtn) {
             downloadBtn.addEventListener('click', () => {
-                // Создаём временную ссылку для скачивания файла comms.zip
                 const link = document.createElement('a');
                 link.href = 'comms.zip';
                 link.download = 'comms.zip';
