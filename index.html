@@ -29,10 +29,9 @@
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 2rem;
-            /* box-shadow удалён */
         }
 
-        /* ===== АНИМАЦИИ ПОЯВЛЕНИЯ (оставляем только появление при скролле) ===== */
+        /* ===== АНИМАЦИИ ПОЯВЛЕНИЯ ===== */
         @keyframes fadeUp {
             0% { opacity: 0; transform: translateY(30px); }
             100% { opacity: 1; transform: translateY(0); }
@@ -83,7 +82,6 @@
         .logo-app img {
             height: 38px;
             width: auto;
-            /* убраны transition и hover-эффекты */
         }
 
         .nav-links {
@@ -96,7 +94,7 @@
             text-decoration: none;
             color: rgba(255, 255, 255, 0.85);
             font-weight: 500;
-            transition: color 0.2s; /* оставляем только цвет, без лишних анимаций */
+            transition: color 0.2s;
             padding-bottom: 4px;
             border-bottom: 1px solid transparent;
         }
@@ -170,7 +168,7 @@
             margin-bottom: 0;
         }
 
-        /* ===== КАРУСЕЛЬ (скрины) — скрываем полосу прокрутки ===== */
+        /* ===== КАРУСЕЛЬ ===== */
         .carousel-section {
             margin-top: 1.5rem;
         }
@@ -188,12 +186,11 @@
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
             padding: 0.5rem 0.5rem 2rem 0.5rem;
-            /* скрываем полосу прокрутки */
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none; /* IE/Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         .carousel-track::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
+            display: none;
         }
 
         .carousel-item {
@@ -204,7 +201,6 @@
             background: rgba(20, 30, 60, 0.5);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255,255,255,0.25);
-            /* убраны тень и переходы */
         }
 
         .carousel-item img {
@@ -235,7 +231,6 @@
             font-size: 1.2rem;
             color: white;
             cursor: pointer;
-            /* убраны тени и переходы, hover-эффект удалён */
         }
 
         /* ===== ИНСТРУКЦИЯ RADMIN ===== */
@@ -269,7 +264,6 @@
             border-radius: 60px;
             font-weight: 500;
             border: 1px solid rgba(255,255,255,0.3);
-            /* убраны тени и переходы */
         }
 
         .howto-gif {
@@ -278,7 +272,6 @@
             overflow: hidden;
             border: 1px solid rgba(255,255,255,0.2);
             background: rgba(0,0,0,0.2);
-            /* убрана тень */
         }
 
         .howto-gif img {
@@ -298,7 +291,6 @@
         .faq-item {
             padding: 2rem 1.8rem;
             backdrop-filter: blur(20px);
-            /* убраны тени, переходы, hover-эффект */
         }
 
         .faq-item h3 {
@@ -322,7 +314,6 @@
             margin: 0 auto;
             padding: 3rem 2rem;
             backdrop-filter: blur(24px);
-            /* убраны тени */
         }
 
         .download-card h2 {
@@ -349,7 +340,6 @@
             align-items: center;
             gap: 0.8rem;
             border: 1px solid rgba(255,255,255,0.2);
-            /* убраны тени и переходы */
         }
 
         /* ===== ФУТЕР ===== */
@@ -377,7 +367,6 @@
 
         .footer-brand img {
             height: 44px;
-            /* убраны transition и hover */
         }
 
         .social-links {
@@ -388,7 +377,6 @@
         .social-links a {
             color: rgba(255,255,255,0.8);
             font-size: 1.6rem;
-            /* убраны transition и hover-эффекты */
         }
 
         .mascot-area {
@@ -399,7 +387,83 @@
         .mascot-area img {
             max-width: 180px;
             opacity: 0.85;
-            /* убраны transition и hover */
+        }
+
+        /* ===== КАПЧА (стили) ===== */
+        .captcha-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: system-ui, -apple-system, 'SF Pro Text', sans-serif;
+            transition: opacity 0.3s ease;
+        }
+
+        .captcha-container {
+            background: rgba(28, 55, 128, 0.7);
+            backdrop-filter: blur(30px);
+            border-radius: 2.5rem;
+            padding: 2rem 2rem 2rem 2rem;
+            max-width: 650px;
+            width: 90%;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .captcha-question {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1.8rem;
+            background: linear-gradient(135deg, #fff, #b0ccff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .captcha-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .captcha-item {
+            background: rgba(10, 20, 50, 0.5);
+            border-radius: 1.2rem;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.2);
+            transition: all 0.1s ease;
+        }
+
+        .captcha-item img {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            display: block;
+        }
+
+        .captcha-item:hover {
+            border-color: rgba(255,255,255,0.6);
+            transform: scale(0.98);
+        }
+
+        .captcha-error {
+            color: #ffb4a2;
+            background: rgba(0,0,0,0.5);
+            padding: 0.5rem;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: inline-block;
         }
 
         /* ===== АДАПТИВНОСТЬ ===== */
@@ -412,6 +476,12 @@
             }
             section {
                 padding: 3rem 1.5rem;
+            }
+            .captcha-question {
+                font-size: 1.4rem;
+            }
+            .captcha-grid {
+                gap: 0.7rem;
             }
         }
 
@@ -436,11 +506,15 @@
                 flex-direction: column;
                 text-align: center;
             }
+            .captcha-container {
+                padding: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
 
+<!-- Основной контент сайта (видимый, но под капчей) -->
 <header>
     <div class="nav-container">
         <div class="logo-app">
@@ -573,14 +647,164 @@
     </footer>
 </div>
 
+<!-- ========== КАПЧА (оверлей) ========== -->
+<div id="captchaOverlay" class="captcha-overlay">
+    <div class="captcha-container">
+        <div class="captcha-question">
+            <i class="fas fa-crown"></i> Какая студия самая популярная и крутая?
+        </div>
+        <div id="captchaGrid" class="captcha-grid"></div>
+        <div id="captchaErrorMessage" class="captcha-error" style="display: none;">❌ Неверно! Выберите студию Бэгэбэн.</div>
+        <div style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">Нажмите на логотип правильной студии</div>
+    </div>
+</div>
+
 <script>
     (function() {
+        // ---------- КАПЧА: генерация сетки 3x3 со случайным расположением begebnstd.png ----------
+        const correctFile = "begebnstd.png";   // правильная картинка
+        const wrongFile = "rckstar.png";       // остальные 8
+        
+        // Создаём массив из 9 путей: 8 раз wrongFile + 1 раз correctFile
+        let imagesPool = [];
+        for (let i = 0; i < 8; i++) imagesPool.push(wrongFile);
+        imagesPool.push(correctFile);
+        
+        // Перемешиваем массив случайным образом
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+        const shuffledImages = shuffleArray([...imagesPool]);
+        
+        // Рендерим сетку капчи
+        const captchaGrid = document.getElementById("captchaGrid");
+        const errorMsgDiv = document.getElementById("captchaErrorMessage");
+        const overlay = document.getElementById("captchaOverlay");
+        
+        // Функция для скрытия капчи и разблокировки сайта
+        function unlockSite() {
+            if (overlay) {
+                overlay.style.opacity = "0";
+                setTimeout(() => {
+                    overlay.style.display = "none";
+                }, 300);
+            }
+            // Разрешаем прокрутку (по умолчанию body не заблокирован, но оверлей исчезает)
+            document.body.style.overflow = "";
+        }
+        
+        // Построение сетки
+        function buildCaptcha() {
+            captchaGrid.innerHTML = "";
+            for (let i = 0; i < shuffledImages.length; i++) {
+                const imgSrc = shuffledImages[i];
+                const div = document.createElement("div");
+                div.className = "captcha-item";
+                const img = document.createElement("img");
+                img.src = imgSrc;
+                img.alt = "Лого студии";
+                div.appendChild(img);
+                // Клик по ячейке
+                div.addEventListener("click", (function(src) {
+                    return function() {
+                        if (src === correctFile) {
+                            // Правильный ответ: убираем капчу
+                            unlockSite();
+                        } else {
+                            // Неправильный ответ: показываем сообщение об ошибке
+                            errorMsgDiv.style.display = "block";
+                            setTimeout(() => {
+                                errorMsgDiv.style.display = "none";
+                            }, 1500);
+                        }
+                    };
+                })(imgSrc));
+                captchaGrid.appendChild(div);
+            }
+        }
+        
+        buildCaptcha();
+        
+        // Блокируем скролл пока капча активна (опционально)
+        document.body.style.overflow = "hidden";
+        // После успешного прохождения, вернём overflow в auto
+        const originalOverflow = document.body.style.overflow;
+        
+        // Сохраняем функцию разблокировки, чтобы восстановить скролл
+        const originalUnlock = unlockSite;
+        window.unlockSite = function() {
+            document.body.style.overflow = "";
+            originalUnlock();
+        };
+        // переопределяем unlockSite с восстановлением скролла
+        unlockSite = function() {
+            document.body.style.overflow = "";
+            if (overlay) {
+                overlay.style.opacity = "0";
+                setTimeout(() => {
+                    overlay.style.display = "none";
+                }, 300);
+            }
+        };
+        // Заменяем обработчики, чтобы использовать новую версию
+        // Но нужно заменить все вызовы внутри замыкания — проще обновить глобально
+        // Переопределим функцию в контексте, но мы уже сохранили ссылку. Вместо этого пересоздадим обработчики с новой функцией
+        // Проще: обновим обработчики, которые используют unlockSite.
+        // Так как мы создаём клики выше, они ссылаются на старую unlockSite? Нет, мы определили unlockSite внутри IIFE,
+        // но затем переопределили её. Однако в замыкании обработчиков осталась ссылка на старую функцию (которая ещё не переопределена).
+        // Исправим: пересоздадим сетку после переопределения unlockSite.
+        // Более чистый вариант: удалим старую и создадим новую с корректной функцией.
+        
+        // Удалим старую сетку и создадим заново с финальной unlockSite
+        function finalUnlock() {
+            document.body.style.overflow = "";
+            if (overlay) {
+                overlay.style.opacity = "0";
+                setTimeout(() => {
+                    overlay.style.display = "none";
+                }, 300);
+            }
+        }
+        
+        // Перестроим капчу с корректной функцией разблокировки
+        function rebuildCaptcha() {
+            captchaGrid.innerHTML = "";
+            for (let i = 0; i < shuffledImages.length; i++) {
+                const imgSrc = shuffledImages[i];
+                const div = document.createElement("div");
+                div.className = "captcha-item";
+                const img = document.createElement("img");
+                img.src = imgSrc;
+                img.alt = "Лого студии";
+                div.appendChild(img);
+                div.addEventListener("click", (function(src) {
+                    return function() {
+                        if (src === correctFile) {
+                            finalUnlock();
+                        } else {
+                            errorMsgDiv.style.display = "block";
+                            setTimeout(() => {
+                                errorMsgDiv.style.display = "none";
+                            }, 1500);
+                        }
+                    };
+                })(imgSrc));
+                captchaGrid.appendChild(div);
+            }
+        }
+        rebuildCaptcha();
+        
+        // ---------- Остальная логика сайта (карусель, анимации, скачивание, навигация) ----------
         // Карусель
         const track = document.getElementById('carouselTrack');
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
         if (track && prevBtn && nextBtn) {
-            const scrollStep = 290; // примерная ширина элемента + отступ
+            const scrollStep = 290;
             prevBtn.addEventListener('click', () => {
                 track.scrollBy({ left: -scrollStep, behavior: 'smooth' });
             });
@@ -588,7 +812,7 @@
                 track.scrollBy({ left: scrollStep, behavior: 'smooth' });
             });
         }
-
+        
         // Анимация появления при скролле
         const fadeElements = document.querySelectorAll('.fade-up');
         const observer = new IntersectionObserver((entries) => {
@@ -600,7 +824,7 @@
             });
         }, { threshold: 0.2, rootMargin: '0px 0px -40px 0px' });
         fadeElements.forEach(el => observer.observe(el));
-
+        
         // Плавный скролл по навигации
         document.querySelectorAll('.nav-links a').forEach(link => {
             link.addEventListener('click', function(e) {
@@ -615,11 +839,11 @@
                 }
             });
         });
-
+        
         // Кнопка скачивания comms.zip
-        const downloadBtn = document.getElementById('downloadBtn');
-        if (downloadBtn) {
-            downloadBtn.addEventListener('click', () => {
+        const downloadBtnElem = document.getElementById('downloadBtn');
+        if (downloadBtnElem) {
+            downloadBtnElem.addEventListener('click', () => {
                 const link = document.createElement('a');
                 link.href = 'comms.zip';
                 link.download = 'comms.zip';
@@ -628,6 +852,9 @@
                 document.body.removeChild(link);
             });
         }
+        
+        // Если капча уже была пройдена (не нужно, но оставляем), но так как она всегда активна, не мешаем
+        // Дополнительно: убираем блокировку скролла после разблокировки
     })();
 </script>
 </body>
