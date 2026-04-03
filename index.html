@@ -3,523 +3,636 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>COMMS — P2P общение через RadminVPN</title>
+    <title>ENIGMA — P2P голосовой чат</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        /* ===== RESET & БАЗОВЫЕ ПЕРЕМЕННЫЕ ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ===== RESET ===== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        /* ===== ПЕРЕМЕННЫЕ ===== */
+        :root {
+            --glass-bg:      rgba(255, 255, 255, 0.62);
+            --glass-border:  rgba(255, 255, 255, 0.95);
+            --glass-shadow:
+                inset 0 1.5px 0 rgba(255,255,255,1),
+                inset 0 -1px 0  rgba(0,0,0,0.04),
+                0 20px 60px     rgba(0,0,0,0.07),
+                0  4px 12px     rgba(0,0,0,0.04);
+            --blur:   blur(38px) saturate(160%);
+            --radius: 2rem;
+            --ink:    #111111;
+            --ink-2:  #555555;
+            --ink-3:  #999999;
         }
 
+        /* ===== ТЕЛО ===== */
         body {
-            background: radial-gradient(circle at 10% 30%, #1C3780, #0a1a4a);
-            font-family: system-ui, -apple-system, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            color: #ffffff;
-            line-height: 1.5;
+            background: #f0f0f2;
+            font-family: system-ui, -apple-system, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            color: var(--ink);
+            line-height: 1.55;
             scroll-behavior: smooth;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        /* ===== СТЕКЛЯННЫЕ ЭЛЕМЕНТЫ (iOS-стиль, без теней) ===== */
-        .glass-card, .glass-nav, .glass-footer, .faq-item, .howto-text, .download-card, .carousel-item {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 2rem;
+        /* ===== ФОНОВЫЕ ОРБЫ (дают глубину для blur) ===== */
+        .bg-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            opacity: 0.55;
+        }
+        .orb-1 {
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, #e2e2e6, transparent 70%);
+            top: -200px; left: -150px;
+            animation: drift 18s ease-in-out infinite alternate;
+        }
+        .orb-2 {
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, #d8d8de, transparent 70%);
+            bottom: -100px; right: -100px;
+            animation: drift 22s ease-in-out infinite alternate-reverse;
+        }
+        .orb-3 {
+            width: 400px; height: 400px;
+            background: radial-gradient(circle, #ebebef, transparent 70%);
+            top: 40%; left: 50%;
+            transform: translate(-50%, -50%);
+            animation: drift 26s ease-in-out infinite alternate;
+        }
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1);   }
+            to   { transform: translate(40px, 30px) scale(1.08); }
+        }
+
+        /* ===== ЖИДКОЕ СТЕКЛО (базовый класс) ===== */
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: var(--radius);
         }
 
         /* ===== АНИМАЦИИ ПОЯВЛЕНИЯ ===== */
-        @keyframes fadeUp {
-            0% { opacity: 0; transform: translateY(30px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
         .fade-up {
             opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.4, 1), transform 0.8s cubic-bezier(0.2, 0.9, 0.4, 1);
+            transform: translateY(28px);
+            transition: opacity 0.75s cubic-bezier(0.2, 0.9, 0.4, 1),
+                        transform 0.75s cubic-bezier(0.2, 0.9, 0.4, 1);
         }
+        .fade-up.appear { opacity: 1; transform: translateY(0); }
 
-        .fade-up.appear {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* ===== ШАПКА (стекло) ===== */
+        /* ===== ШАПКА ===== */
         header {
             position: sticky;
-            top: 0;
+            top: 12px;
             z-index: 100;
-            background: rgba(28, 55, 128, 0.6);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 0.8rem 2rem;
+            padding: 0 1.5rem;
         }
-
-        .nav-container {
-            max-width: 1300px;
+        .nav-inner {
+            max-width: 1200px;
             margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.8rem;
+            padding: 0.7rem 1.5rem;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 100px;
         }
-
         .logo-app {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            font-weight: 500;
-            font-size: 1.25rem;
+            gap: 0.6rem;
+            font-weight: 700;
+            font-size: 1.15rem;
             letter-spacing: -0.3px;
+            color: var(--ink);
+            text-decoration: none;
         }
-
-        .logo-app img {
-            height: 38px;
-            width: auto;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-
+        .logo-app img { height: 34px; width: auto; }
+        .nav-links { display: flex; gap: 1.6rem; flex-wrap: wrap; }
         .nav-links a {
             text-decoration: none;
-            color: rgba(255, 255, 255, 0.85);
+            color: var(--ink-2);
+            font-size: 0.95rem;
             font-weight: 500;
             transition: color 0.2s;
-            padding-bottom: 4px;
-            border-bottom: 1px solid transparent;
         }
+        .nav-links a:hover { color: var(--ink); }
 
-        .nav-links a:hover {
-            color: white;
-            border-bottom-color: white;
-        }
-
-        /* ===== ОСНОВНЫЕ СЕКЦИИ ===== */
-        section {
-            max-width: 1300px;
+        /* ===== ОБЁРТКА СЕКЦИЙ ===== */
+        .section-wrap {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 5rem 2rem;
+            padding: 5rem 1.5rem;
+        }
+
+        /* ===== МЕТКА СЕКЦИИ ===== */
+        .section-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-3);
+            background: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.08);
+            padding: 0.35rem 1rem;
+            border-radius: 100px;
+            margin-bottom: 1.2rem;
         }
 
         .section-title {
-            font-size: 2.6rem;
-            font-weight: 600;
-            letter-spacing: -0.02em;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .section-title i {
-            font-size: 2.2rem;
-            color: #8aafff;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 2.5rem;
+            color: var(--ink);
         }
 
         /* ===== HERO ===== */
-        .hero {
-            display: flex;
+        .hero-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
             align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 2rem;
-            padding: 1rem 0 2rem;
+            padding-top: 2rem;
         }
 
-        .hero-left {
-            flex: 1;
-            min-width: 280px;
-        }
-
-        .hero-left h1 {
-            font-size: 3.8rem;
-            font-weight: 700;
-            line-height: 1.1;
-            letter-spacing: -0.03em;
-            background: linear-gradient(135deg, #FFFFFF, #C0D4FF);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+        .hero-title {
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.0;
+            color: var(--ink);
             margin-bottom: 1.5rem;
         }
-
-        .hero-left .highlight {
-            color: #ffffff;
-            background: linear-gradient(120deg, rgba(44,87,205,0.6), rgba(28,55,128,0.8));
-            padding: 0 0.2rem;
+        .hero-title .word-glass {
             display: inline-block;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.9);
+            box-shadow: inset 0 1px 0 white, 0 4px 16px rgba(0,0,0,0.07);
+            border-radius: 0.5rem;
+            padding: 0 0.25em;
+        }
+        .hero-sub {
+            font-size: 1.15rem;
+            color: var(--ink-2);
+            max-width: 480px;
+            margin-bottom: 2rem;
         }
 
-        .hero-left p {
-            font-size: 1.3rem;
-            color: rgba(255, 255, 255, 0.85);
-            max-width: 550px;
-            margin-bottom: 0;
+        /* Пилюли-теги */
+        .tag-row { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--ink-2);
+            background: rgba(255,255,255,0.65);
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 0.4rem 0.9rem;
+            border-radius: 100px;
+            backdrop-filter: blur(10px);
         }
+        .tag i { font-size: 0.75rem; color: var(--ink-3); }
+
+        /* Карточка-превью героя */
+        .hero-card {
+            position: relative;
+        }
+        .hero-card .glass {
+            padding: 0.5rem;
+            border-radius: 2.2rem;
+        }
+        .hero-card img {
+            width: 100%;
+            border-radius: 1.8rem;
+            display: block;
+            background: #e0e0e0;
+        }
+        /* Плавающий бейдж */
+        .float-badge {
+            position: absolute;
+            bottom: -1rem;
+            left: -1.2rem;
+            background: rgba(255,255,255,0.78);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,1);
+            box-shadow: inset 0 1px 0 white, 0 8px 24px rgba(0,0,0,0.1);
+            border-radius: 1.2rem;
+            padding: 0.8rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+        }
+        .float-badge .dot {
+            width: 10px; height: 10px;
+            background: #34c759;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(52,199,89,0.25);
+            animation: pulse-dot 2s ease infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulse-dot {
+            0%,100% { box-shadow: 0 0 0 3px rgba(52,199,89,0.25); }
+            50%      { box-shadow: 0 0 0 6px rgba(52,199,89,0.1);  }
+        }
+        .float-badge span { font-size: 0.85rem; font-weight: 600; color: var(--ink); }
 
         /* ===== КАРУСЕЛЬ ===== */
-        .carousel-section {
-            margin-top: 1.5rem;
-        }
-
-        .carousel-container {
-            position: relative;
-            margin: 2rem 0;
-        }
-
         .carousel-track {
             display: flex;
-            gap: 1.5rem;
+            gap: 1.2rem;
             overflow-x: auto;
             scroll-snap-type: x mandatory;
             scroll-behavior: smooth;
             -webkit-overflow-scrolling: touch;
-            padding: 0.5rem 0.5rem 2rem 0.5rem;
+            padding: 0.5rem 0.5rem 1.5rem;
             scrollbar-width: none;
-            -ms-overflow-style: none;
         }
-        .carousel-track::-webkit-scrollbar {
-            display: none;
-        }
-
+        .carousel-track::-webkit-scrollbar { display: none; }
         .carousel-item {
-            flex: 0 0 280px;
+            flex: 0 0 270px;
             scroll-snap-align: start;
-            border-radius: 1.8rem;
+            background: rgba(255,255,255,0.58);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 1.6rem;
             overflow: hidden;
-            background: rgba(20, 30, 60, 0.5);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.25);
         }
-
         .carousel-item img {
             width: 100%;
-            height: 200px;
+            height: 190px;
             object-fit: cover;
             display: block;
-            background: #1a2a5a;
+            background: #ddd;
         }
-
         .carousel-controls {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-top: 0.5rem;
+            gap: 0.8rem;
+            margin-top: 1.2rem;
         }
-
         .carousel-btn {
-            background: rgba(255,255,255,0.15);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255,255,255,0.3);
-            width: 48px;
-            height: 48px;
+            background: rgba(255,255,255,0.68);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.95);
+            box-shadow: inset 0 1px 0 white, 0 4px 12px rgba(0,0,0,0.08);
+            width: 46px; height: 46px;
             border-radius: 50%;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
-            color: white;
+            font-size: 1rem;
+            color: var(--ink);
             cursor: pointer;
+            transition: transform 0.15s;
         }
+        .carousel-btn:hover { transform: scale(1.08); }
+        .carousel-btn:active { transform: scale(0.95); }
 
-        /* ===== ИНСТРУКЦИЯ RADMIN ===== */
-        .howto-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 2rem;
-            align-items: flex-start;
+        /* ===== КАК ИСПОЛЬЗОВАТЬ — шаги ===== */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 2.5rem;
         }
-
-        .howto-text {
-            flex: 1 1 45%;
-            padding: 2rem;
-            border-radius: 2rem;
+        .step-card {
+            background: rgba(255,255,255,0.58);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 1.8rem;
+            padding: 1.8rem 1.5rem;
+            position: relative;
+            overflow: hidden;
         }
-
-        .howto-text p {
-            font-size: 1.05rem;
-            margin-bottom: 1.3rem;
-            color: rgba(255,255,255,0.9);
+        .step-num {
+            position: absolute;
+            top: -0.5rem; right: 0.8rem;
+            font-size: 5rem;
+            font-weight: 900;
+            color: rgba(0,0,0,0.05);
+            line-height: 1;
+            letter-spacing: -0.05em;
+            pointer-events: none;
+            user-select: none;
         }
+        .step-card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--ink);
+        }
+        .step-card p { font-size: 0.9rem; color: var(--ink-2); }
 
         .radmin-link {
             display: inline-flex;
             align-items: center;
             gap: 0.6rem;
-            background: #2C57CD;
-            color: white;
+            background: var(--ink);
+            color: #fff;
             text-decoration: none;
-            padding: 0.8rem 1.8rem;
-            border-radius: 60px;
-            font-weight: 500;
-            border: 1px solid rgba(255,255,255,0.3);
+            padding: 0.85rem 2rem;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: opacity 0.2s, transform 0.15s;
         }
+        .radmin-link:hover { opacity: 0.85; transform: translateY(-1px); }
+        .radmin-link:active { transform: scale(0.97); }
 
-        .howto-gif {
-            flex: 1 1 45%;
+        /* ===== HOWTO GIF ===== */
+        .howto-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+        .howto-gif-wrap {
+            background: rgba(255,255,255,0.58);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
             border-radius: 2rem;
             overflow: hidden;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: rgba(0,0,0,0.2);
+            padding: 0.4rem;
         }
-
-        .howto-gif img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
+        .howto-gif-wrap img { width: 100%; border-radius: 1.7rem; display: block; }
 
         /* ===== FAQ ===== */
         .faq-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.8rem;
-            margin-top: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.2rem;
         }
-
         .faq-item {
-            padding: 2rem 1.8rem;
-            backdrop-filter: blur(20px);
+            background: rgba(255,255,255,0.58);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 1.8rem;
+            padding: 1.8rem 1.6rem;
         }
-
         .faq-item h3 {
-            font-weight: 600;
-            margin-bottom: 1rem;
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.7rem;
+            color: var(--ink);
             display: flex;
             align-items: center;
-            gap: 0.6rem;
-            color: #E0EDFF;
+            gap: 0.5rem;
         }
-
-        .faq-item p {
-            color: rgba(255,255,255,0.85);
-            font-size: 1rem;
-        }
+        .faq-item h3 i { color: var(--ink-3); font-size: 0.9rem; }
+        .faq-item p { color: var(--ink-2); font-size: 0.92rem; }
 
         /* ===== СКАЧАТЬ ===== */
-        .download-card {
-            text-align: center;
-            max-width: 550px;
+        .download-wrap {
+            max-width: 540px;
             margin: 0 auto;
-            padding: 3rem 2rem;
-            backdrop-filter: blur(24px);
+            text-align: center;
         }
-
+        .download-card {
+            background: rgba(255,255,255,0.68);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 2.5rem;
+            padding: 3rem 2.5rem;
+        }
         .download-card h2 {
-            font-size: 2.2rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            margin-bottom: 0.6rem;
         }
-
         .download-card .dev-note {
-            color: rgba(255,255,255,0.7);
+            color: var(--ink-3);
+            font-size: 0.9rem;
             margin-bottom: 2rem;
         }
-
         .btn-download {
-            background: linear-gradient(135deg, #2C57CD, #1C3780);
+            background: var(--ink);
             border: none;
             color: white;
-            font-size: 1.2rem;
-            font-weight: 500;
+            font-size: 1rem;
+            font-weight: 600;
             padding: 1rem 2.5rem;
-            border-radius: 60px;
+            border-radius: 100px;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 0.8rem;
-            border: 1px solid rgba(255,255,255,0.2);
+            gap: 0.7rem;
+            transition: opacity 0.2s, transform 0.15s;
         }
+        .btn-download:hover { opacity: 0.82; transform: translateY(-1px); }
+        .btn-download:active { transform: scale(0.97); }
+
+        /* ===== МАСКОТ ===== */
+        .mascot-area {
+            text-align: center;
+            padding: 0 2rem 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        .mascot-area img { max-width: 160px; opacity: 0.9; }
 
         /* ===== ФУТЕР ===== */
         .footer-wrapper {
-            background: rgba(10, 20, 45, 0.7);
-            backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(255,255,255,0.15);
-            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
+            padding: 0 1.5rem 1.5rem;
         }
-
-        footer {
-            max-width: 1300px;
+        .footer-inner {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 2rem 2rem;
+            background: rgba(255,255,255,0.62);
+            backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            border-radius: 2rem;
+            padding: 1.5rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 2rem;
+            flex-wrap: wrap;
         }
-
-        .footer-brand {
-            display: flex;
-            align-items: center;
-        }
-
-        .footer-brand img {
-            height: 44px;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 1.8rem;
-        }
-
+        .footer-brand img { height: 38px; }
+        .social-links { display: flex; gap: 1.5rem; }
         .social-links a {
-            color: rgba(255,255,255,0.8);
-            font-size: 1.6rem;
+            color: var(--ink-3);
+            font-size: 1.4rem;
+            transition: color 0.2s;
         }
+        .social-links a:hover { color: var(--ink); }
 
-        .mascot-area {
-            text-align: center;
-            padding: 1rem 2rem 0 2rem;
-        }
-
-        .mascot-area img {
-            max-width: 180px;
-            opacity: 0.85;
-        }
-
-        /* ===== КАПЧА (стили) ===== */
+        /* ===== КАПЧА ===== */
         .captcha-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
+            inset: 0;
+            background: rgba(240,240,242,0.65);
+            backdrop-filter: blur(32px) saturate(160%);
+            -webkit-backdrop-filter: blur(32px) saturate(160%);
             z-index: 2000;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: system-ui, -apple-system, 'SF Pro Text', sans-serif;
             transition: opacity 0.3s ease;
         }
-
         .captcha-container {
-            background: rgba(28, 55, 128, 0.7);
-            backdrop-filter: blur(30px);
+            background: rgba(255,255,255,0.78);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255,255,255,1);
+            box-shadow:
+                inset 0 1.5px 0 rgba(255,255,255,1),
+                0 30px 80px rgba(0,0,0,0.12),
+                0 6px 20px rgba(0,0,0,0.06);
             border-radius: 2.5rem;
-            padding: 2rem 2rem 2rem 2rem;
-            max-width: 650px;
+            padding: 2.5rem 2rem;
+            max-width: 560px;
             width: 90%;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.3);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
         }
-
-        .captcha-question {
-            font-size: 1.8rem;
+        .captcha-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
             font-weight: 600;
-            margin-bottom: 1.8rem;
-            background: linear-gradient(135deg, #fff, #b0ccff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-3);
+            background: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.07);
+            padding: 0.3rem 0.9rem;
+            border-radius: 100px;
+            margin-bottom: 1rem;
         }
-
+        .captcha-question {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            margin-bottom: 1.8rem;
+        }
         .captcha-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 0.8rem;
+            margin-bottom: 1.2rem;
         }
-
         .captcha-item {
-            background: rgba(10, 20, 50, 0.5);
+            background: rgba(255,255,255,0.5);
+            border: 1px solid rgba(0,0,0,0.08);
             border-radius: 1.2rem;
             overflow: hidden;
             cursor: pointer;
-            border: 2px solid rgba(255,255,255,0.2);
-            transition: all 0.1s ease;
+            transition: transform 0.12s, box-shadow 0.12s;
         }
-
         .captcha-item img {
             width: 100%;
-            aspect-ratio: 1 / 1;
+            aspect-ratio: 1;
             object-fit: cover;
             display: block;
         }
-
         .captcha-item:hover {
-            border-color: rgba(255,255,255,0.6);
-            transform: scale(0.98);
+            transform: scale(0.97);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
         }
-
+        .captcha-item:active { transform: scale(0.93); }
         .captcha-error {
-            color: #ffb4a2;
-            background: rgba(0,0,0,0.5);
-            padding: 0.5rem;
-            border-radius: 40px;
-            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #cc3030;
+            background: rgba(200,0,0,0.07);
+            border: 1px solid rgba(200,0,0,0.15);
+            padding: 0.45rem 1rem;
+            border-radius: 100px;
             margin-top: 0.5rem;
-            display: inline-block;
+        }
+        .captcha-hint {
+            margin-top: 1rem;
+            font-size: 0.78rem;
+            color: var(--ink-3);
         }
 
-        /* ===== АДАПТИВНОСТЬ ===== */
+        /* ===== АДАПТИВ ===== */
         @media (max-width: 900px) {
-            .hero-left h1 {
-                font-size: 2.8rem;
-            }
-            .section-title {
-                font-size: 2rem;
-            }
-            section {
-                padding: 3rem 1.5rem;
-            }
-            .captcha-question {
-                font-size: 1.4rem;
-            }
-            .captcha-grid {
-                gap: 0.7rem;
-            }
+            .hero-layout,
+            .howto-layout { grid-template-columns: 1fr; }
+            .hero-card { display: none; }
         }
-
-        @media (max-width: 700px) {
-            .nav-container {
-                flex-direction: column;
-                text-align: center;
-            }
-            .hero-left h1 {
-                font-size: 2.2rem;
-            }
-            .carousel-item {
-                flex-basis: 220px;
-            }
-            .carousel-item img {
-                height: 160px;
-            }
-            .howto-grid {
-                flex-direction: column;
-            }
-            footer {
-                flex-direction: column;
-                text-align: center;
-            }
-            .captcha-container {
-                padding: 1.5rem;
-            }
+        @media (max-width: 680px) {
+            .nav-inner { border-radius: 1.4rem; }
+            .section-wrap { padding: 3.5rem 1rem; }
+            .steps-grid { grid-template-columns: 1fr 1fr; }
+            .footer-inner { flex-direction: column; text-align: center; }
+            .captcha-grid { gap: 0.55rem; }
+            .captcha-question { font-size: 1.2rem; }
+        }
+        @media (max-width: 420px) {
+            .steps-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<!-- Основной контент сайта (видимый, но под капчей) -->
+<!-- ФОНОВЫЕ ОРБЫ -->
+<div class="bg-canvas" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</div>
+
+<!-- ===== ШАПКА ===== -->
 <header>
-    <div class="nav-container">
-        <div class="logo-app">
-            <img src="logo.svg" alt="COMMS logo">
-        </div>
+    <div class="nav-inner">
+        <a class="logo-app" href="#">
+            <img src="logo.svg" alt="ENIGMA">
+            ENIGMA
+        </a>
         <nav class="nav-links">
             <a href="#about">О приложении</a>
             <a href="#howto">Как пользоваться</a>
@@ -530,34 +643,57 @@
 </header>
 
 <main>
-    <!-- HERO -->
-    <section style="padding-bottom: 1rem;">
-        <div class="hero">
-            <div class="hero-left fade-up">
-                <h1>Общайтесь <span class="highlight">P2P</span><br>через RadminVPN</h1>
-                <p>COMMS — минималистичный мессенджер для прямого общения между ПК. Без серверов, только ваша приватность и скорость.</p>
+    <!-- ===== HERO ===== -->
+    <section class="section-wrap" style="padding-top: 4rem; padding-bottom: 2rem;">
+        <div class="hero-layout">
+            <div class="fade-up">
+                <div class="section-eyebrow">
+                    <i class="fas fa-microphone"></i> Голосовой чат P2P
+                </div>
+                <h1 class="hero-title">
+                    Говори.<br>
+                    <span class="word-glass">Напрямую.</span>
+                </h1>
+                <p class="hero-sub">
+                    ENIGMA — минималистичный P2P-чат для голоса и файлов. Без серверов, без регистрации. Только ваша локальная сеть через RadminVPN.
+                </p>
+                <div class="tag-row">
+                    <span class="tag"><i class="fas fa-bolt"></i> Без задержек</span>
+                    <span class="tag"><i class="fas fa-lock"></i> Без серверов</span>
+                    <span class="tag"><i class="fas fa-users"></i> До 10+ человек</span>
+                    <span class="tag"><i class="fab fa-windows"></i> Windows</span>
+                </div>
+            </div>
+            <div class="hero-card fade-up">
+                <div class="glass">
+                    <img src="interface.png" alt="Интерфейс ENIGMA">
+                </div>
+                <div class="float-badge">
+                    <div class="dot"></div>
+                    <span>4 участника онлайн</span>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- О приложении + карусель скринов -->
-    <section id="about">
-        <div class="section-title fade-up">
+    <!-- ===== О ПРИЛОЖЕНИИ + КАРУСЕЛЬ ===== -->
+    <section class="section-wrap" id="about">
+        <div class="section-eyebrow fade-up">
             <i class="fas fa-cube"></i> О приложении
         </div>
-        <div class="glass-card fade-up" style="padding: 2rem; margin-bottom: 2rem;">
-            <p style="font-size: 1.2rem; max-width: 800px;">P2P-мессенджер для ПК, созданный студией бэгэбэн. Минимум интерфейса — максимум свободы. Обменивайтесь сообщениями и файлами напрямую, используя RadminVPN как виртуальную локальную сеть.</p>
+        <h2 class="section-title fade-up">Что такое ENIGMA?</h2>
+        <div class="glass fade-up" style="padding: 2rem; margin-bottom: 2rem;">
+            <p style="font-size: 1.1rem; max-width: 740px; color: var(--ink-2);">
+                P2P-мессенджер для ПК от студии Бэгэбэн. Никаких посредников — только ваши устройства. Общайтесь голосом, делитесь файлами, проводите опросы — всё работает внутри виртуальной локальной сети RadminVPN.
+            </p>
         </div>
-
-        <div class="carousel-section fade-up">
-            <div class="carousel-container">
-                <div class="carousel-track" id="carouselTrack">
-                    <div class="carousel-item"><img src="howto1.png" alt="Скрин интерфейса 1"></div>
-                    <div class="carousel-item"><img src="howto2.png" alt="Скрин интерфейса 2"></div>
-                    <div class="carousel-item"><img src="howto3.png" alt="Скрин интерфейса 3"></div>
-                    <div class="carousel-item"><img src="howto4.png" alt="Скрин интерфейса 4"></div>
-                    <div class="carousel-item"><img src="howto5.png" alt="Скрин интерфейса 5"></div>
-                </div>
+        <div class="fade-up">
+            <div class="carousel-track" id="carouselTrack">
+                <div class="carousel-item"><img src="howto1.png" alt="Экран 1"></div>
+                <div class="carousel-item"><img src="howto2.png" alt="Экран 2"></div>
+                <div class="carousel-item"><img src="howto3.png" alt="Экран 3"></div>
+                <div class="carousel-item"><img src="howto4.png" alt="Экран 4"></div>
+                <div class="carousel-item"><img src="howto5.png" alt="Экран 5"></div>
             </div>
             <div class="carousel-controls">
                 <button class="carousel-btn" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
@@ -566,296 +702,212 @@
         </div>
     </section>
 
-    <!-- Как пользоваться (RadminVPN + gif) -->
-    <section id="howto">
-        <div class="section-title fade-up">
-            <i class="fas fa-wifi"></i> Как пользоваться
+    <!-- ===== КАК ПОЛЬЗОВАТЬСЯ ===== -->
+    <section class="section-wrap" id="howto">
+        <div class="section-eyebrow fade-up">
+            <i class="fas fa-wifi"></i> Инструкция
         </div>
-        <div class="howto-grid fade-up">
-            <div class="howto-gif">
-                <img src="tutor.gif" alt="Туториал RadminVPN + COMMS">
+        <h2 class="section-title fade-up">Как подключиться</h2>
+
+        <!-- Шаги -->
+        <div class="steps-grid fade-up">
+            <div class="step-card">
+                <div class="step-num">1</div>
+                <h3>Скачайте RadminVPN</h3>
+                <p>Бесплатный клиент для создания виртуальной локальной сети.</p>
             </div>
-            <div class="howto-text">
-                <p>COMMS использует виртуальные локальные сети для P2P-соединения. Лучший выбор — <strong>RadminVPN</strong> (бесплатно, просто).</p>
-                <p>1️⃣ Скачайте и установите RadminVPN по ссылке ниже.<br>
-                2️⃣ Запустите, войдите в аккаунт или создайте новый.<br>
-                3️⃣ Создайте сеть (кнопка «Создать сеть») или присоединитесь к существующей по имени/паролю.<br>
-                4️⃣ Убедитесь, что все участники в одной сети.<br>
-                5️⃣ Запустите COMMS — приложение автоматически найдет собеседников в сети RadminVPN.</p>
-                <a href="https://www.radmin-vpn.com/" target="_blank" rel="noopener noreferrer" class="radmin-link">
-                    <i class="fas fa-external-link-alt"></i> Скачать RadminVPN
-                </a>
+            <div class="step-card">
+                <div class="step-num">2</div>
+                <h3>Войдите или зарегистрируйтесь</h3>
+                <p>Создайте аккаунт RadminVPN или войдите в существующий.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">3</div>
+                <h3>Создайте сеть</h3>
+                <p>Нажмите «Создать сеть» или присоединитесь по имени и паролю.</p>
+            </div>
+            <div class="step-card">
+                <div class="step-num">4</div>
+                <h3>Запустите ENIGMA</h3>
+                <p>Приложение автоматически найдёт всех участников в сети.</p>
+            </div>
+        </div>
+
+        <!-- GIF + кнопка -->
+        <div class="howto-layout fade-up">
+            <div class="howto-gif-wrap">
+                <img src="tutor.gif" alt="Туториал">
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: center; gap: 1.2rem;">
+                <p style="color: var(--ink-2); font-size: 1.05rem;">
+                    ENIGMA использует UDP broadcast — как только все участники в одной сети RadminVPN, приложение само всех находит. Никаких IP, никаких настроек.
+                </p>
+                <div>
+                    <a href="https://www.radmin-vpn.com/" target="_blank" rel="noopener noreferrer" class="radmin-link">
+                        <i class="fas fa-external-link-alt"></i> Скачать RadminVPN
+                    </a>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- ЧАВО -->
-    <section id="faq">
-        <div class="section-title fade-up">
+    <!-- ===== ЧАВО ===== -->
+    <section class="section-wrap" id="faq">
+        <div class="section-eyebrow fade-up">
             <i class="fas fa-comment-dots"></i> ЧАВО
         </div>
+        <h2 class="section-title fade-up">Частые вопросы</h2>
         <div class="faq-grid">
             <div class="faq-item fade-up">
                 <h3><i class="fas fa-calendar-alt"></i> Когда релиз?</h3>
-                <p>21 марта 2026 года. Уже доступна первая тестовая версия.</p>
+                <p>21 марта 2026 года. Первая тестовая версия уже доступна для скачивания.</p>
             </div>
             <div class="faq-item fade-up">
-                <h3><i class="fab fa-windows"></i> Платформа?</h3>
-                <p>Только Windows (RadminVPN не поддерживает macOS, но можно использовать альтернативы).</p>
+                <h3><i class="fab fa-windows"></i> Только Windows?</h3>
+                <p>Да, RadminVPN не поддерживает macOS, но можно попробовать альтернативные VPN-решения.</p>
             </div>
             <div class="faq-item fade-up">
-                <h3><i class="fas fa-mobile-alt"></i> Будет ли мобильная версия?</h3>
-                <p>Пока нет планов из‑за особенностей P2P-соединения и RadminVPN.</p>
+                <h3><i class="fas fa-mobile-alt"></i> Будет мобильная версия?</h3>
+                <p>Пока нет — P2P на мобильных устройствах имеет ограничения из-за особенностей ОС.</p>
             </div>
             <div class="faq-item fade-up">
-                <h3><i class="fas fa-comment"></i> Почему COMMS?</h3>
-                <p>От «communications» — простое и прямое общение. Никакой лишней магии, только суть.</p>
+                <h3><i class="fas fa-signature"></i> Почему ENIGMA?</h3>
+                <p>Загадочно, просто, прямо. Как само приложение — никакой лишней магии.</p>
             </div>
         </div>
     </section>
 
-    <!-- Скачать -->
-    <section id="download">
-        <div class="section-title fade-up">
+    <!-- ===== СКАЧАТЬ ===== -->
+    <section class="section-wrap" id="download">
+        <div class="section-eyebrow fade-up" style="margin: 0 auto 0; display: flex; width: fit-content;">
             <i class="fas fa-download"></i> Скачать
         </div>
-        <div class="download-card fade-up">
-            <h2>COMMS для Windows</h2>
-            <p class="dev-note">Версия 1.0 (бета). Приложение активно развивается, первая сборка уже готова.</p>
-            <button class="btn-download" id="downloadBtn">
-                <i class="fas fa-archive"></i> Скачать comms.zip
-            </button>
+        <div class="download-wrap fade-up" style="margin-top: 1.5rem;">
+            <div class="download-card">
+                <h2>ENIGMA для Windows</h2>
+                <p class="dev-note">Версия 1.0 beta · Активно разрабатывается · Первая сборка готова</p>
+                <button class="btn-download" id="downloadBtn">
+                    <i class="fas fa-archive"></i> Скачать enigma.zip
+                </button>
+            </div>
         </div>
     </section>
 </main>
 
-<!-- Маскот -->
+<!-- МАСКОТ -->
 <div class="mascot-area">
-    <img src="mascot.png" alt="COMMS mascot">
+    <img src="mascot.png" alt="Маскот ENIGMA">
 </div>
 
-<!-- Футер только с лого студии и соцсетями -->
+<!-- ФУТЕР -->
 <div class="footer-wrapper">
-    <footer>
+    <div class="footer-inner">
         <div class="footer-brand">
-            <img src="logobgd.svg" alt="Бэгэбэн студия">
+            <img src="logobgd.svg" alt="Студия Бэгэбэн">
         </div>
         <div class="social-links">
-            <a href="https://t.me/begebenstudio" target="_blank" aria-label="Telegram канал студии"><i class="fab fa-telegram-plane"></i></a>
-            <a href="https://t.me/thebogdand" target="_blank" aria-label="Контакт для связи"><i class="fas fa-user-headset"></i></a>
+            <a href="https://t.me/begebenstudio" target="_blank" aria-label="Telegram канал"><i class="fab fa-telegram-plane"></i></a>
+            <a href="https://t.me/thebogdand"    target="_blank" aria-label="Связаться"><i class="fas fa-user-headset"></i></a>
         </div>
-    </footer>
+    </div>
 </div>
 
-<!-- ========== КАПЧА (оверлей) ========== -->
+<!-- ===== КАПЧА ===== -->
 <div id="captchaOverlay" class="captcha-overlay">
     <div class="captcha-container">
-        <div class="captcha-question">
-            <i class="fas fa-crown"></i> Какая студия самая популярная и крутая?
-        </div>
+        <div class="captcha-eyebrow"><i class="fas fa-shield-alt"></i> Проверка</div>
+        <div class="captcha-question">Какая студия самая крутая?</div>
         <div id="captchaGrid" class="captcha-grid"></div>
-        <div id="captchaErrorMessage" class="captcha-error" style="display: none;">❌ Неверно! Выберите студию Бэгэбэн.</div>
-        <div style="margin-top: 1rem; font-size: 0.8rem; opacity: 0.7;">Нажмите на логотип правильной студии</div>
+        <div id="captchaErrorMessage" class="captcha-error" style="display: none;">
+            ✕ Неверно — выберите студию Бэгэбэн
+        </div>
+        <p class="captcha-hint">Нажмите на правильный логотип</p>
     </div>
 </div>
 
 <script>
-    (function() {
-        // ---------- КАПЧА: генерация сетки 3x3 со случайным расположением begebnstd.png ----------
-        const correctFile = "begebnstd.png";   // правильная картинка
-        const wrongFile = "rckstar.png";       // остальные 8
-        
-        // Создаём массив из 9 путей: 8 раз wrongFile + 1 раз correctFile
-        let imagesPool = [];
-        for (let i = 0; i < 8; i++) imagesPool.push(wrongFile);
-        imagesPool.push(correctFile);
-        
-        // Перемешиваем массив случайным образом
-        function shuffleArray(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
+(function () {
+
+    /* -------- КАПЧА -------- */
+    const CORRECT = "begebnstd.png";
+    const WRONG   = "rckstar.png";
+
+    function shuffle(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
         }
-        const shuffledImages = shuffleArray([...imagesPool]);
-        
-        // Рендерим сетку капчи
-        const captchaGrid = document.getElementById("captchaGrid");
-        const errorMsgDiv = document.getElementById("captchaErrorMessage");
-        const overlay = document.getElementById("captchaOverlay");
-        
-        // Функция для скрытия капчи и разблокировки сайта
-        function unlockSite() {
-            if (overlay) {
-                overlay.style.opacity = "0";
-                setTimeout(() => {
-                    overlay.style.display = "none";
-                }, 300);
+        return arr;
+    }
+
+    const pool    = shuffle([...Array(8).fill(WRONG), CORRECT]);
+    const grid    = document.getElementById("captchaGrid");
+    const errMsg  = document.getElementById("captchaErrorMessage");
+    const overlay = document.getElementById("captchaOverlay");
+
+    function unlock() {
+        overlay.style.opacity = "0";
+        document.body.style.overflow = "";
+        setTimeout(() => overlay.style.display = "none", 300);
+    }
+
+    pool.forEach(src => {
+        const div = document.createElement("div");
+        div.className = "captcha-item";
+        const img = document.createElement("img");
+        img.src = src; img.alt = "Лого";
+        div.appendChild(img);
+        div.addEventListener("click", () => {
+            if (src === CORRECT) {
+                unlock();
+            } else {
+                errMsg.style.display = "inline-flex";
+                setTimeout(() => errMsg.style.display = "none", 1500);
             }
-            // Разрешаем прокрутку (по умолчанию body не заблокирован, но оверлей исчезает)
-            document.body.style.overflow = "";
-        }
-        
-        // Построение сетки
-        function buildCaptcha() {
-            captchaGrid.innerHTML = "";
-            for (let i = 0; i < shuffledImages.length; i++) {
-                const imgSrc = shuffledImages[i];
-                const div = document.createElement("div");
-                div.className = "captcha-item";
-                const img = document.createElement("img");
-                img.src = imgSrc;
-                img.alt = "Лого студии";
-                div.appendChild(img);
-                // Клик по ячейке
-                div.addEventListener("click", (function(src) {
-                    return function() {
-                        if (src === correctFile) {
-                            // Правильный ответ: убираем капчу
-                            unlockSite();
-                        } else {
-                            // Неправильный ответ: показываем сообщение об ошибке
-                            errorMsgDiv.style.display = "block";
-                            setTimeout(() => {
-                                errorMsgDiv.style.display = "none";
-                            }, 1500);
-                        }
-                    };
-                })(imgSrc));
-                captchaGrid.appendChild(div);
-            }
-        }
-        
-        buildCaptcha();
-        
-        // Блокируем скролл пока капча активна (опционально)
-        document.body.style.overflow = "hidden";
-        // После успешного прохождения, вернём overflow в auto
-        const originalOverflow = document.body.style.overflow;
-        
-        // Сохраняем функцию разблокировки, чтобы восстановить скролл
-        const originalUnlock = unlockSite;
-        window.unlockSite = function() {
-            document.body.style.overflow = "";
-            originalUnlock();
-        };
-        // переопределяем unlockSite с восстановлением скролла
-        unlockSite = function() {
-            document.body.style.overflow = "";
-            if (overlay) {
-                overlay.style.opacity = "0";
-                setTimeout(() => {
-                    overlay.style.display = "none";
-                }, 300);
-            }
-        };
-        // Заменяем обработчики, чтобы использовать новую версию
-        // Но нужно заменить все вызовы внутри замыкания — проще обновить глобально
-        // Переопределим функцию в контексте, но мы уже сохранили ссылку. Вместо этого пересоздадим обработчики с новой функцией
-        // Проще: обновим обработчики, которые используют unlockSite.
-        // Так как мы создаём клики выше, они ссылаются на старую unlockSite? Нет, мы определили unlockSite внутри IIFE,
-        // но затем переопределили её. Однако в замыкании обработчиков осталась ссылка на старую функцию (которая ещё не переопределена).
-        // Исправим: пересоздадим сетку после переопределения unlockSite.
-        // Более чистый вариант: удалим старую и создадим новую с корректной функцией.
-        
-        // Удалим старую сетку и создадим заново с финальной unlockSite
-        function finalUnlock() {
-            document.body.style.overflow = "";
-            if (overlay) {
-                overlay.style.opacity = "0";
-                setTimeout(() => {
-                    overlay.style.display = "none";
-                }, 300);
-            }
-        }
-        
-        // Перестроим капчу с корректной функцией разблокировки
-        function rebuildCaptcha() {
-            captchaGrid.innerHTML = "";
-            for (let i = 0; i < shuffledImages.length; i++) {
-                const imgSrc = shuffledImages[i];
-                const div = document.createElement("div");
-                div.className = "captcha-item";
-                const img = document.createElement("img");
-                img.src = imgSrc;
-                img.alt = "Лого студии";
-                div.appendChild(img);
-                div.addEventListener("click", (function(src) {
-                    return function() {
-                        if (src === correctFile) {
-                            finalUnlock();
-                        } else {
-                            errorMsgDiv.style.display = "block";
-                            setTimeout(() => {
-                                errorMsgDiv.style.display = "none";
-                            }, 1500);
-                        }
-                    };
-                })(imgSrc));
-                captchaGrid.appendChild(div);
-            }
-        }
-        rebuildCaptcha();
-        
-        // ---------- Остальная логика сайта (карусель, анимации, скачивание, навигация) ----------
-        // Карусель
-        const track = document.getElementById('carouselTrack');
-        const prevBtn = document.getElementById('prevBtn');
-        const nextBtn = document.getElementById('nextBtn');
-        if (track && prevBtn && nextBtn) {
-            const scrollStep = 290;
-            prevBtn.addEventListener('click', () => {
-                track.scrollBy({ left: -scrollStep, behavior: 'smooth' });
-            });
-            nextBtn.addEventListener('click', () => {
-                track.scrollBy({ left: scrollStep, behavior: 'smooth' });
-            });
-        }
-        
-        // Анимация появления при скролле
-        const fadeElements = document.querySelectorAll('.fade-up');
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('appear');
-                    observer.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.2, rootMargin: '0px 0px -40px 0px' });
-        fadeElements.forEach(el => observer.observe(el));
-        
-        // Плавный скролл по навигации
-        document.querySelectorAll('.nav-links a').forEach(link => {
-            link.addEventListener('click', function(e) {
-                const href = this.getAttribute('href');
-                if (href && href.startsWith('#')) {
-                    e.preventDefault();
-                    const targetId = href.substring(1);
-                    const target = document.getElementById(targetId);
-                    if (target) {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-            });
         });
-        
-        // Кнопка скачивания comms.zip
-        const downloadBtnElem = document.getElementById('downloadBtn');
-        if (downloadBtnElem) {
-            downloadBtnElem.addEventListener('click', () => {
-                const link = document.createElement('a');
-                link.href = 'comms.zip';
-                link.download = 'comms.zip';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            });
-        }
-        
-        // Если капча уже была пройдена (не нужно, но оставляем), но так как она всегда активна, не мешаем
-        // Дополнительно: убираем блокировку скролла после разблокировки
-    })();
+        grid.appendChild(div);
+    });
+
+    document.body.style.overflow = "hidden";
+
+    /* -------- КАРУСЕЛЬ -------- */
+    const track   = document.getElementById("carouselTrack");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    if (track) {
+        prevBtn.addEventListener("click", () => track.scrollBy({ left: -285, behavior: "smooth" }));
+        nextBtn.addEventListener("click", () => track.scrollBy({ left:  285, behavior: "smooth" }));
+    }
+
+    /* -------- FADE-UP -------- */
+    const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+            if (e.isIntersecting) { e.target.classList.add("appear"); obs.unobserve(e.target); }
+        });
+    }, { threshold: 0.15, rootMargin: "0px 0px -30px 0px" });
+    document.querySelectorAll(".fade-up").forEach(el => obs.observe(el));
+
+    /* -------- ПЛАВНАЯ НАВИГАЦИЯ -------- */
+    document.querySelectorAll(".nav-links a").forEach(a => {
+        a.addEventListener("click", e => {
+            const href = a.getAttribute("href");
+            if (href?.startsWith("#")) {
+                e.preventDefault();
+                document.getElementById(href.slice(1))
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        });
+    });
+
+    /* -------- СКАЧАТЬ -------- */
+    document.getElementById("downloadBtn")?.addEventListener("click", () => {
+        const a = Object.assign(document.createElement("a"), {
+            href: "enigma.zip", download: "enigma.zip"
+        });
+        document.body.appendChild(a); a.click(); a.remove();
+    });
+
+})();
 </script>
 </body>
 </html>
