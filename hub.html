@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Enigma Realm</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #111;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Ambient blobs ── */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-1 { width: 500px; height: 500px; background: #a0c4ff; top: -100px; left: -100px; }
+    .blob-2 { width: 400px; height: 400px; background: #c9b8ff; top: 30%; right: -80px; }
+    .blob-3 { width: 350px; height: 350px; background: #b8f0d8; bottom: 100px; left: 20%; }
+
+    /* ── Header ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 32px;
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    .avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(255,255,255,0.9);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+      flex-shrink: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .name-wrapper {
+      display: flex;
+      align-items: center;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: #111;
+      min-height: 22px;
+    }
+
+    #nameText { min-width: 2px; }
+
+    .cursor {
+      display: inline-block;
+      width: 2px;
+      height: 15px;
+      background: #111;
+      margin-left: 2px;
+      vertical-align: middle;
+      border-radius: 1px;
+      animation: blink 1s step-start infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; }
+      50%      { opacity: 0; }
+    }
+
+    /* ── Main ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 72px 32px 48px;
+    }
+
+    /* ── Welcome block ── */
+    .welcome-block {
+      margin-bottom: 12px;
+    }
+
+    .welcome-label {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 14px;
+    }
+
+    .welcome-title {
+      font-size: clamp(40px, 7vw, 80px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.0;
+      color: #0a0a0a;
+      margin-bottom: 64px;
+    }
+
+    .welcome-title span {
+      background: linear-gradient(135deg, #6a9fd8 0%, #a78bfa 50%, #6ee7b7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: clamp(22px, 3vw, 30px);
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #0a0a0a;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba(0,0,0,0.08);
+      border-radius: 1px;
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 22px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.5);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.75);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow:
+        0 4px 24px rgba(0,0,0,0.06),
+        0 1px 3px rgba(0,0,0,0.04),
+        inset 0 1px 0 rgba(255,255,255,0.95);
+      transition: transform 0.28s cubic-bezier(.25,.8,.25,1),
+                  box-shadow 0.28s cubic-bezier(.25,.8,.25,1);
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow:
+        0 16px 48px rgba(0,0,0,0.1),
+        0 4px 12px rgba(0,0,0,0.06),
+        inset 0 1px 0 rgba(255,255,255,0.95);
+    }
+
+    .card-img {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card-body {
+      padding: 18px 20px 22px;
+    }
+    .card-title {
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+      color: #0a0a0a;
+    }
+    .card-desc {
+      font-size: 13.5px;
+      color: #666;
+      line-height: 1.55;
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      padding: 40px 0 52px;
+    }
+
+    footer a {
+      display: inline-block;
+      opacity: 0.35;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    footer a:hover { opacity: 0.75; transform: scale(1.06); }
+    footer img { height: 30px; display: block; }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Header -->
+  <header>
+    <img id="avatar" class="avatar" src="assetsapp/1.png" alt="avatar">
+    <div class="name-wrapper">
+      <span id="nameText"></span>
+      <span class="cursor"></span>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main>
+
+    <!-- Приветствие -->
+    <div class="welcome-block">
+      <h1 class="welcome-title">Добро Пожаловать<br>в <span>Хаб!</span></h1>
+    </div>
+
+    <!-- Раздел -->
+    <div class="section-title">ENIGMA REALM</div>
+
+    <div class="cards">
+      <div class="card">
+        <img src="sumo.png" alt="SUMO" class="card-img">
+        <div class="card-body">
+          <div class="card-title">SUMO</div>
+          <div class="card-desc">Пока что единственная игра на 3 и более человека.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <img src="xo.png" alt="Крестики Нолики" class="card-img">
+        <div class="card-body">
+          <div class="card-title">Крестики Нолики</div>
+          <div class="card-desc">Игра на 2. Правила простые и вы их скорее всего знаете.</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <img src="stacks.png" alt="STACKS" class="card-img">
+        <div class="card-body">
+          <div class="card-title">STACKS</div>
+          <div class="card-desc">Игра на 2. Отбивай мячик.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <a href="index.html">
+      <img src="logo.svg" alt="Logo">
+    </a>
+  </footer>
+
+  <script>
+    const BASE_1 = [
+      "Радин","Север","Верес","Громов","Ворон","Остров","Заречный","Белов",
+      "Мельник","Грач","Родин","Крот","Дымов","Степной","Соболь","Лавров",
+      "Стрельцов","Лесной","Русаков","Боров","Угрюмов","Зверев","Покров",
+      "Янтарный","Савин","Ветров","Морозов","Туманов","Орлов","Соколов",
+      "Волков","Медведев","Лисицын","Бобров","Окунев","Ершов","Щукин",
+      "Судаков","Карпов","Сомов","Лосев","Кабанов","Барсуков","Оленев",
+      "Зайцев","Белкин","Ежов","Хомяков","Норкин","Барков","Грачев",
+      "Синицын","Скворцов","Дроздов","Снегирев","Лебедев","Журавлев",
+      "Цаплин","Чайкин","Орлецов","Ястребов","Беркутов","Филин","Совинов",
+      "Коршунов","Черепанов","Ужинов","Вьюнов","Змеев","Гадюкин","Ящеров",
+      "Жабин","Пиявкин","Пауков","Жуков","Муравьев","Стрекозин","Шмелев",
+      "Пчелкин","Комаров","Мухин","Светляков","Клещев","Сверчков",
+      "Долгоносов","Златоглазов","Чешуйкин","Ночницын","Ручейников",
+      "Скорпионов","Палочкин","Термитов","Медянков","Грозин","Лютый",
+      "Смуглый","Темнов","Ясный","Светлый","Гордый",
+    ];
+
+    const BASE_2 = [
+      "Аким","Варлаам","Глеб","Демид","Елисей","Захар","Игнат","Карп",
+      "Лавр","Макар","Назар","Остап","Прохор","Родион","Савва","Тихон",
+      "Ульян","Фаддей","Харитон","Яков","Аристарх","Борислав","Венедикт",
+      "Гордей","Дамиан","Евстафий","Еремей","Зиновий","Илларион","Кузьма",
+      "Леонтий","Мирон","Никандр","Осип","Пантелей","Ратибор","Святослав",
+      "Тарас","Фома","Фрол","Хрисанф","Цезарь","Чеслав","Эраст","Юлиан",
+      "Артемий","Всеволод","Гавриил","Демьян","Ефим","Ипатий","Климент",
+      "Лукьян","Мефодий","Нестор","Онуфрий","Парфен","Руслан","Севастьян",
+      "Трифон","Федот","Ян","Афанасий","Бажен","Влас","Герман","Евдоким",
+      "Изот","Касьян","Лазарь","Мартын","Нифонт","Павел","Потап","Сазон",
+      "Терентий","Устин","Федор","Харлампий","Эммануил","Юстин","Авдей",
+      "Бронислав","Валентин","Герасим","Евлампий","Исидор","Киприан",
+      "Леон","Михей","Никон","Олимпий","Паисий","Платон","Самуил",
+      "Тимофей","Урий","Феликс","Эдмунд","Яромир",
+    ];
+
+    const nameEl   = document.getElementById('nameText');
+    const avatarEl = document.getElementById('avatar');
+
+    const rnd   = arr => arr[Math.floor(Math.random() * arr.length)];
+    const sleep = ms  => new Promise(r => setTimeout(r, ms));
+
+    function makeName() {
+      const year = 1995 + Math.floor(Math.random() * 10);
+      return `${rnd(BASE_2)} ${rnd(BASE_1)} ${year}`;
+    }
+    function makeAvatar() {
+      return `assetsapp/${Math.floor(Math.random() * 17) + 1}.png`;
+    }
+
+    let displayed = '';
+    let busy = false;
+
+    async function erase() {
+      while (displayed.length > 0) {
+        displayed = displayed.slice(0, -1);
+        nameEl.textContent = displayed;
+        await sleep(28);
+      }
+    }
+
+    async function type(text) {
+      for (const ch of text) {
+        displayed += ch;
+        nameEl.textContent = displayed;
+        await sleep(48);
+      }
+    }
+
+    async function cycle() {
+      if (busy) return;
+      busy = true;
+      await erase();
+      await sleep(180);
+      avatarEl.style.opacity = '0.4';
+      avatarEl.src = makeAvatar();
+      avatarEl.onload = () => { avatarEl.style.opacity = '1'; };
+      await type(makeName());
+      busy = false;
+    }
+
+    // Первый запуск
+    (async () => {
+      await sleep(400);
+      await type(makeName());
+      setInterval(cycle, 4500);
+    })();
+  </script>
+</body>
+</html>
